@@ -1,15 +1,16 @@
 [general]
 name=Tables Attributaires France
-description=Creer rapidement des tables attributaires preconfigurees pour les adresses en France.
-version=0.1.0
+description=Assistant QGIS pour geocoder et enrichir des couches de points avec des adresses France.
+version=0.2.0
 qgisMinimumVersion=3.22
 author=Pierre
 email=
-about=Premiere base de plugin QGIS pour generer une table d'adresses francaise avec les champs essentiels.
+about=Geocodage inverse France avec choix des champs, simulation avant lancement, cache local, traitement en tache QGIS, resume, rapport CSV et export de couche.
 tracker=
-repository=
+repository=https://github.com/PHergat/Plugin_adresse_france
 category=Vector
-tags=adresse,france,attributaire,table
-homepage=
+tags=adresse,france,geocodage,geocodage-inverse,qgis,table
+homepage=https://github.com/PHergat/Plugin_adresse_france
+icon=icon.png
 experimental=True
 deprecated=False

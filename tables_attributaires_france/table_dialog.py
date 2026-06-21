@@ -28,7 +28,7 @@ class TableAddressDialog(QDialog):
                 ("numero", "Numero"),
                 ("voie", "Voie"),
                 ("adresse", "Adresse complete"),
-                ("statut_adresse", "Statut adresse"),
+                ("resultat_adresse", "Resultat"),
                 ("complement", "Complement"),
                 ("code_postal", "Code postal"),
                 ("ville", "Ville"),
@@ -61,7 +61,7 @@ class TableAddressDialog(QDialog):
         "numero",
         "voie",
         "adresse",
-        "statut_adresse",
+        "resultat_adresse",
         "code_postal",
         "ville",
         "commune",
@@ -75,7 +75,6 @@ class TableAddressDialog(QDialog):
         "commentaire",
         "date_creation",
     }
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Assistant adresses France")
@@ -102,6 +101,7 @@ class TableAddressDialog(QDialog):
         layout.addWidget(buttons)
         self.setLayout(layout)
         self._set_export_enabled(False)
+        self._set_report_enabled(False)
 
     def selected_layer(self):
         layer_id = self._layer_input.currentData()
@@ -114,6 +114,9 @@ class TableAddressDialog(QDialog):
 
     def empty_only(self):
         return self._empty_only_input.isChecked()
+
+    def only_missing_results(self):
+        return self._only_missing_results_input.isChecked()
 
     def reverse_geocode(self):
         return self._reverse_geocode_input.isChecked()
@@ -136,6 +139,12 @@ class TableAddressDialog(QDialog):
 
     def export_driver(self):
         return self._export_format_input.currentData()
+
+    def should_export_report(self):
+        return self._report_input.isChecked()
+
+    def report_path(self):
+        return self._report_path_input.text().strip()
 
     def _build_header(self):
         header = QFrame()
@@ -176,6 +185,8 @@ class TableAddressDialog(QDialog):
         self._selected_only_input.setChecked(False)
         self._empty_only_input = QCheckBox("Ne remplir que les cellules vides")
         self._empty_only_input.setChecked(True)
+        self._only_missing_results_input = QCheckBox("Ne traiter que les points sans resultat")
+        self._only_missing_results_input.setChecked(False)
         self._reverse_geocode_input = QCheckBox("Rechercher les adresses depuis les coordonnees")
         self._reverse_geocode_input.setChecked(True)
         self._configure_form_input = QCheckBox("Organiser le formulaire de saisie QGIS")
@@ -184,6 +195,7 @@ class TableAddressDialog(QDialog):
         for checkbox in (
             self._selected_only_input,
             self._empty_only_input,
+            self._only_missing_results_input,
             self._reverse_geocode_input,
             self._configure_form_input,
         ):
@@ -204,7 +216,7 @@ class TableAddressDialog(QDialog):
         select_recommended = QPushButton("Selection conseillee")
         select_all = QPushButton("Tout cocher")
         select_none = QPushButton("Tout decocher")
-        select_recommended.clicked.connect(lambda: self._set_field_selection(self.DEFAULT_FIELDS))
+        select_recommended.clicked.connect(self._apply_recommended_fields)
         select_all.clicked.connect(lambda: self._set_field_selection(set(self._field_inputs)))
         select_none.clicked.connect(lambda: self._set_field_selection(set()))
         actions.addWidget(select_recommended)
@@ -264,11 +276,28 @@ class TableAddressDialog(QDialog):
         export_layout.addRow("Fichier", export_path_layout)
         export_box.setLayout(export_layout)
 
+        report_box = QGroupBox("Rapport")
+        report_layout = QFormLayout()
+        self._report_input = QCheckBox("Exporter un rapport CSV de traitement")
+        self._report_input.toggled.connect(self._set_report_enabled)
+        self._report_path_input = QLineEdit()
+        self._report_path_input.setPlaceholderText("Choisir un rapport CSV")
+        self._report_browse_button = QPushButton("Parcourir")
+        self._report_browse_button.clicked.connect(self._choose_report_path)
+
+        report_path_layout = QHBoxLayout()
+        report_path_layout.addWidget(self._report_path_input)
+        report_path_layout.addWidget(self._report_browse_button)
+        report_layout.addRow("", self._report_input)
+        report_layout.addRow("Fichier", report_path_layout)
+        report_box.setLayout(report_layout)
+
         format_note = QLabel("GeoPackage est conseille pour conserver les noms de champs complets.")
         format_note.setObjectName("Hint")
         format_note.setWordWrap(True)
 
         layout.addWidget(export_box)
+        layout.addWidget(report_box)
         layout.addWidget(format_note)
         layout.addStretch(1)
         tab.setLayout(layout)
@@ -285,10 +314,17 @@ class TableAddressDialog(QDialog):
         for field_name, checkbox in self._field_inputs.items():
             checkbox.setChecked(field_name in selected_fields)
 
+    def _apply_recommended_fields(self):
+        self._set_field_selection(self.DEFAULT_FIELDS)
+
     def _set_export_enabled(self, enabled):
         self._export_format_input.setEnabled(enabled)
         self._export_path_input.setEnabled(enabled)
         self._export_browse_button.setEnabled(enabled)
+
+    def _set_report_enabled(self, enabled):
+        self._report_path_input.setEnabled(enabled)
+        self._report_browse_button.setEnabled(enabled)
 
     def _choose_export_path(self):
         filters = {
@@ -306,6 +342,16 @@ class TableAddressDialog(QDialog):
         )
         if path:
             self._export_path_input.setText(path)
+
+    def _choose_report_path(self):
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Exporter le rapport",
+            "",
+            "CSV (*.csv)",
+        )
+        if path:
+            self._report_path_input.setText(path)
 
     def _apply_style(self):
         self.setStyleSheet(

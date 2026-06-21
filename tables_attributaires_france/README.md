@@ -1,15 +1,30 @@
 # Tables Attributaires France
 
-Plugin QGIS experimental pour ajouter rapidement des champs attributaires preconfigures a une couche existante.
+Plugin QGIS pour enrichir une couche de points avec des champs d'adresse France et lancer un geocodage inverse depuis les coordonnees.
 
-## Premiere table disponible
+## Fonctions principales
 
-La version initiale complete une couche vectorielle du projet avec les champs `Adresses France` suivants :
+- choix de la couche vectorielle a traiter ;
+- traitement de toute la couche ou seulement des entites selectionnees ;
+- option pour ne traiter que les points sans resultat existant ;
+- choix des champs a creer/remplir ;
+- simulation avant lancement avec volume, appels API estimes, duree estimee et sorties prevues ;
+- geocodage inverse via les services Geoplateforme/BAN ;
+- cache local pour eviter de refaire les memes recherches ;
+- traitement reseau lance en tache QGIS (`QgsTask`) pour limiter le blocage de l'interface ;
+- resume de fin avec adresses trouvees, non trouvees, erreurs API et doublons ;
+- export de la couche en GeoPackage, Shapefile, GeoJSON ou CSV ;
+- export d'un rapport CSV de traitement.
+
+## Champs conseilles
+
+La selection conseillee cree une table lisible pour l'utilisateur :
 
 - `id`
 - `numero`
 - `voie`
 - `adresse`
+- `resultat_adresse`
 - `complement`
 - `code_postal`
 - `ville`
@@ -24,32 +39,26 @@ La version initiale complete une couche vectorielle du projet avec les champs `A
 - `commentaire`
 - `date_creation`
 
-Sur les couches de points, le plugin peut aussi remplir automatiquement `pays`, `date_creation`, `latitude` et `longitude` pour les entites deja presentes.
+Les anciens champs techniques `statut_adresse` et `type_lieu` ne sont plus crees par defaut. Les informations utiles sont regroupees dans `resultat_adresse`, `source` et `commentaire`.
 
-Si l'option de recherche d'adresse est activee, il interroge le service de geocodage inverse de la Geoplateforme pour completer `adresse`, `code_postal`, `ville`, `commune`, `code_insee`, `departement` et `region` a partir des coordonnees des points.
+## Rapport CSV
 
-## Options de traitement
+Le rapport exportable contient notamment :
 
-La fenetre du plugin est organisee en trois onglets : `Traitement`, `Champs` et `Export`.
-
-Elle permet de :
-
-- afficher une simulation avant lancement avec le nombre d'entites, les appels adresse estimes, le temps estime et les champs a ajouter ;
-- traiter uniquement les entites selectionnees ;
-- choisir les champs a creer et remplir ;
-- ne remplir que les cellules vides, ou ecraser les valeurs existantes ;
-- organiser le formulaire de saisie QGIS en groupes `Adresse`, `Localisation` et `Infos internes` ;
-- exporter la couche enrichie en GeoPackage, Shapefile, GeoJSON ou CSV.
-
-Pour les points sans adresse precise, le plugin ajoute le champ `statut_adresse` :
-
-- `adresse_trouvee` : une adresse a ete retrouvee ;
-- `commune_seule` : aucune adresse precise, mais une commune a ete retrouvee ;
-- `adresse_non_trouvee` : aucun resultat exploitable.
+- date du traitement ;
+- nombre total de points traites ;
+- nombre de points mis a jour ;
+- adresses trouvees ;
+- communes seules ;
+- adresses non trouvees ;
+- erreurs API ;
+- doublons ;
+- resultats deja presents ;
+- points sans geometrie exploitable.
 
 ## Installation locale
 
-Copier ce dossier dans le repertoire des plugins QGIS, puis activer le plugin dans le gestionnaire d'extensions.
+Copier le dossier `tables_attributaires_france` dans le repertoire des plugins QGIS, puis activer le plugin dans le gestionnaire d'extensions.
 
 Chemin Windows typique :
 
@@ -57,9 +66,6 @@ Chemin Windows typique :
 %APPDATA%\QGIS\QGIS3\profiles\default\python\plugins\tables_attributaires_france
 ```
 
-## Prochaines evolutions possibles
+## Notes
 
-- Ajouter d'autres modeles de tables.
-- Ajouter des listes de valeurs pour les regions et departements.
-- Generer automatiquement des formulaires de saisie QGIS.
-- Ajouter l'import/export de modeles de champs.
+Le geocodage depend de services externes. En cas de coupure reseau, timeout ou limitation temporaire, le plugin renseigne `source` et `commentaire` avec l'erreur rencontree au lieu de bloquer toute la couche.

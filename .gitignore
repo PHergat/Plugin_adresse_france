@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 .qgis_plugin_tools/
 .vscode/
+tables_attributaires_france/geocoding_cache.json
