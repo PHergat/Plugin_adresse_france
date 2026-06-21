@@ -1,0 +1,15 @@
+[general]
+name=Tables Attributaires France
+description=Creer rapidement des tables attributaires preconfigurees pour les adresses en France.
+version=0.1.0
+qgisMinimumVersion=3.22
+author=Pierre
+email=
+about=Premiere base de plugin QGIS pour generer une table d'adresses francaise avec les champs essentiels.
+tracker=
+repository=
+category=Vector
+tags=adresse,france,attributaire,table
+homepage=
+experimental=True
+deprecated=False
